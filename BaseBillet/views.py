@@ -43,7 +43,7 @@ from rest_framework.views import APIView
 from ApiBillet.permissions import TenantAdminPermission, CanInitiatePaymentPermission, CanCreateEventPermission
 from AuthBillet.models import TibilletUser, Wallet, HumanUser
 from AuthBillet.serializers import MeSerializer
-from AuthBillet.utils import get_or_create_user
+from AuthBillet.utils import get_or_create_user, sender_mail_connect
 from AuthBillet.views import activate
 from BaseBillet.models import Configuration, Ticket, Product, Event, Tag, Paiement_stripe, Membership, Reservation, \
     FormbricksConfig, FormbricksForms, FederatedPlace, Carrousel, LigneArticle, PriceSold, \
@@ -427,8 +427,16 @@ class ScanQrCode(viewsets.ViewSet):  # /qr
             user.is_active = True
             user.save()
 
-            # Parti pris : On logue l'user lorsqu'il scanne sa carte.
-            login(request, user)
+            # En dev et test, on log directement l'user pour éviter les allers retours de validation d'email à chaque scan de carte.
+            if settings.TEST or settings.DEBUG:
+                login(request, user)
+            else:
+                # En prod, on envoie juste le mail de connexion pour éviter les problèmes de sécurité liés à l'auto-login
+                # On envoie le mail de connexion à l'user pour lui permettre d'accéder à son compte et de voir les tickets liés à sa carte.
+                sender_mail_connect(user.email)
+                messages.add_message(request, messages.WARNING,
+                                 _("We have sent you a sign-in link. Please click the link in the email to access your account. Don't forget to check your spam folder."))
+                return redirect("/")
 
             # Pour les tests :
             # On est sur le moteur de démonstration / test
