@@ -842,6 +842,25 @@ class NFCcardFedow():
             return False
 
         return validated_card.validated_data
+    
+    # KDC 28/02/2026 >>>
+    def check_card_from_tag_id(self, tag_id: str):
+        response_check = _get(
+            fedow_config=self.fedow_config,
+            path=f'card/{tag_id}/check_card_by_tag_id',
+        )
+
+        if response_check.status_code != 200:
+            logger.error(f"check_card_from_tag_id : {response_check.status_code} {response_check.json()}")
+            raise Exception(f"check_card_from_tag_id : {response_check.status_code} {response_check.json()}")
+
+        validated_card = CardValidator(data=response_check.json())
+        if not validated_card.is_valid():
+            logger.error(validated_card.errors)
+            raise Exception(validated_card.errors)
+
+        return validated_card.validated_data
+    # KDC 28/02/2026 <<<
 
 
 class FederationFedow():

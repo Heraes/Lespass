@@ -1,5 +1,6 @@
 # Create your views here.
 
+import uuid
 import json
 import logging
 from datetime import datetime, timedelta
@@ -1012,6 +1013,28 @@ class Wallet(viewsets.ViewSet):
             return Response(data=data, status=status.HTTP_201_CREATED)
 
         return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
+    ### KDC 27/02/26 >>>
+    # Endpoint de test pour le développement d'une méthode de consultation de solde de wallet. A virer une fois la méthode de consultation de solde développée.
+    @action(detail=False, methods=['GET'], url_path='check_card/(?P<pk>[^/.]+)', permission_classes=[permissions.AllowAny])
+    def check_card_from_qrcode_uuid(self, request, pk=None):
+        fedowAPI = FedowAPI()
+
+        try:
+            qrcode_uuid: uuid.uuid4 = uuid.UUID(pk)
+        except ValueError:
+            logger.warning("ValueError, not an uuid")
+            raise Http404()
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+        serialized_qrcard = fedowAPI.NFCcard.qr_retrieve(qrcode_uuid)
+        first_tag_id = serialized_qrcard['first_tag_id']
+        serialized_check_card = fedowAPI.NFCcard.check_card_from_tag_id(first_tag_id)
+                
+        return Response(serialized_check_card, status=status.HTTP_200_OK)
+    ### KDC 27/02/26 <<<
 
 
 

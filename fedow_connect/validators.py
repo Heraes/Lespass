@@ -184,6 +184,7 @@ class WalletValidator(serializers.Serializer):
 
 class QrCardValidator(serializers.Serializer):
     wallet_uuid = serializers.UUIDField()
+    first_tag_id = serializers.CharField(min_length=8, max_length=8, validators=[validate_hex8]) # KDC 28/02/2026 : On ajoute le first_tag_id afin de pouvoir faire un check card comme sur LaBoutik
     is_wallet_ephemere = serializers.BooleanField()
     origin = OriginValidator()
 
