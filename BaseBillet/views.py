@@ -370,6 +370,44 @@ def emailconfirmation(request, token):
     except Exception as e:
         raise Http404("Error on email confirmation")
 
+class CheckCard(viewsets.ViewSet):
+
+    def retrieve(self, request, pk=None):
+        fedowAPI = FedowAPI()
+        
+        # TODO: Serializer ?
+        try:
+            qrcode_uuid: uuid.uuid4 = uuid.UUID(pk)
+        except ValueError:
+            logger.warning("ValueError, not an uuid")
+            raise Http404()
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+        serialized_qrcard = fedowAPI.NFCcard.qr_retrieve(qrcode_uuid)
+        first_tag_id = serialized_qrcard['first_tag_id']
+        serialized_check_card = fedowAPI.NFCcard.check_card_from_tag_id(first_tag_id)
+
+        # On retire les adhésions, on les affiche dans l'autre table
+        #tokens = [token for token in wallet.get('tokens') if token.get('asset_category') not in ['SUB', 'BDG']]
+
+        tokens = serialized_check_card['wallet']['tokens']
+
+        context = {
+            "qrcode_uuid": qrcode_uuid,     
+            "tagId": first_tag_id,
+            "base_template": 'reunion/base.html',  
+            "tokens_table": 'htmx/views/my_account/tokens_table.html',
+            "tokens": tokens
+        }
+
+        return render(request, "reunion/check_base.html", context=context)
+
+    def get_permissions(self):
+        permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
+
 
 class ScanQrCode(viewsets.ViewSet):  # /qr
     authentication_classes = [SessionAuthentication, ]
@@ -410,44 +448,38 @@ class ScanQrCode(viewsets.ViewSet):  # /qr
                 logger.warning(f"serialized_qrcode_card {qrcode_uuid} non valide")
                 raise Http404()
 
-            # La carte n'a pas d'user, on redirige vers la page de renseignement d'user
-            if serialized_qrcode_card['is_wallet_ephemere']:
-                logger.info("Wallet ephemere, on demande le mail")
-                template_context = get_context(request)
-                template_context['qrcode_uuid'] = qrcode_uuid
-                template_context['base_template'] = 'reunion/blank_base.html'
-                # Logout au cas où on scanne les cartes à la suite.
-                logout(request)
-                return render(request, "reunion/views/register.html", context=template_context)
+            # # La carte n'a pas d'user, on redirige vers la page de renseignement d'user
+            # if serialized_qrcode_card['is_wallet_ephemere']:
+            #     logger.info("Wallet ephemere, on demande le mail")
+            #     template_context = get_context(request)
+            #     template_context['qrcode_uuid'] = qrcode_uuid
+            #     template_context['base_template'] = 'reunion/blank_base.html'
+            #     # Logout au cas où on scanne les cartes à la suite.
+            #     logout(request)
+            #     return render(request, "reunion/views/register.html", context=template_context)
 
             # Si wallet non ephemere, alors on a un user :
-            wallet = Wallet.objects.get(uuid=serialized_qrcode_card['wallet_uuid'])
+            # wallet = Wallet.objects.get(uuid=serialized_qrcode_card['wallet_uuid'])
 
-            user: TibilletUser = wallet.user
-            user.is_active = True
-            user.save()
+            return redirect(f"/check_card/{qrcode_uuid}")
 
-            # En dev et test, on log directement l'user pour éviter les allers retours de validation d'email à chaque scan de carte.
-            if settings.TEST or settings.DEBUG:
-                login(request, user)
-            else:
-                # En prod, on envoie juste le mail de connexion pour éviter les problèmes de sécurité liés à l'auto-login
-                # On envoie le mail de connexion à l'user pour lui permettre d'accéder à son compte et de voir les tickets liés à sa carte.
-                sender_mail_connect(user.email)
-                messages.add_message(request, messages.WARNING,
-                                 _("We have sent you a sign-in link. Please click the link in the email to access your account. Don't forget to check your spam folder."))
-                return redirect("/")
+            # user: TibilletUser = wallet.user
+            # user.is_active = True
+            # user.save()
 
-            # Pour les tests :
-            # On est sur le moteur de démonstration / test
-            # Pour les tests fonctionnel, on a besoin de vérifier le token, on le génère ici.
-            if settings.TEST or settings.DEBUG:
-                token = user.get_connect_token()
-                base_url = connection.tenant.get_primary_domain().domain
-                connexion_url = f"https://{base_url}/emailconfirmation/{token}"
-                messages.add_message(request, messages.INFO, format_html(f"<a href='{connexion_url}'>TEST MODE</a>"))
+            # # Parti pris de faire la connexion directement après le scan du QR code, même si l'email n'est pas validé.
+            # login(request, user)            
 
-            return redirect("/my_account")
+            # # Pour les tests :
+            # # On est sur le moteur de démonstration / test
+            # # Pour les tests fonctionnel, on a besoin de vérifier le token, on le génère ici.
+            # if settings.TEST or settings.DEBUG:
+            #     token = user.get_connect_token()
+            #     base_url = connection.tenant.get_primary_domain().domain
+            #     connexion_url = f"https://{base_url}/emailconfirmation/{token}"
+            #     messages.add_message(request, messages.INFO, format_html(f"<a href='{connexion_url}'>TEST MODE</a>"))
+
+            # return redirect("/my_account")
 
     # @action(detail=False, methods=['POST'])
     # def link_with_email_confirm(self, request):

@@ -1,0 +1,20 @@
+{% extends base_template %}
+{% load static i18n tibitags %}
+
+{% block main %}
+    <main class="container-lg py-5">
+        <p class="lead mb-5">          
+            {% comment %}<span class="text-danger">Card UUID : {{qrcode_uuid}}</span> </br>
+             Ne plus afficher l'UUID une fois le développement terminé {% endcomment %}
+            <span>Carte N°: <code>{{tagId}}</code></span>
+        </p>     
+        
+        <p>
+            {% include tokens_table %}
+        </p>
+            
+        <a href="/" class="btn btn-secondary w-100 p-3 mb-3">
+            {% translate "Go back" %} 
+        </a>
+    </main>
+{% endblock %}

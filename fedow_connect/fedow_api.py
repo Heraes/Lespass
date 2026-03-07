@@ -783,6 +783,7 @@ class NFCcardFedow():
 
         return serialized_card.validated_data
 
+    # KDC 28/02/2026 >>>
     def qr_retrieve(self, qrcode_uuid: uuid4):
         # On vérifie que l'uuid soit bien un uuid :
         checked_uuid = uuid.UUID(str(qrcode_uuid))
@@ -796,6 +797,7 @@ class NFCcardFedow():
             raise Exception(serialized_card.errors)
 
         return serialized_card.validated_data
+    # KDC 28/02/2026 <<<
 
     def linkwallet_card_number(self, user: TibilletUser = None, card_number: str = None):
         response_link = _post(
