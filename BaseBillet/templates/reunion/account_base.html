@@ -4,7 +4,8 @@
 {% block main %}
     <main class="container-lg py-5">
         <p class="lead mb-5">
-            {% trans 'Linked email:' %} <code>{{ user.email }}</code><br/>
+            {# Ne pas afficher l'email directement lors du scan #}
+            {# {% trans 'Linked email:' %} <code>{{ user.email }}</code><br/> #}
 
             {% if profile.admin_this_tenant %}
                 <span class="text-danger">{% trans 'Administrator' %}</span>
