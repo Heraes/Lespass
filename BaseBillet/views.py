@@ -394,12 +394,14 @@ class CheckCard(viewsets.ViewSet):
         #tokens = [token for token in wallet.get('tokens') if token.get('asset_category') not in ['SUB', 'BDG']]
 
         tokens = serialized_check_card['wallet']['tokens']
+        number_printed = serialized_check_card['number_printed']
         tokens = [token for token in tokens if token.get('asset_category') in ['TLF', 'TNF']]
 
         context = {
             "config": config,
             "qrcode_uuid": qrcode_uuid,     
             "tagId": first_tag_id,
+            "number_printed": number_printed,
             "base_template": 'reunion/blank_base.html',  
             "tokens_table": 'htmx/views/my_account/light_tokens_table.html',
             "tokens": tokens,
