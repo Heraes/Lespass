@@ -3,18 +3,24 @@
 
 {% block main %}
     <main class="container-lg py-5">
-        <p class="lead mb-5">          
-            {% comment %}<span class="text-danger">Card UUID : {{qrcode_uuid}}</span> </br>
-             Ne plus afficher l'UUID une fois le développement terminé {% endcomment %}
+        <picture class="d-block {% if ratio %}ratio ratio-{{ ratio }}{% else %}h-100{% endif %}" style="text-align: center">
+                <img class="object-fit-cover w-100 h-100{% if class %} {{ class }}{% endif %}" 
+                {% if style %}style="{{ style }}"{% endif %} 
+                src="{{ config.logo.thumbnail.url|randImg }}" alt="{{ config.organisation }}"/>
+        </picture>
+
+        <h1 style="text-align: center">{{config.organisation}}</h1>
+        <br/>
+        <h2>Consultation du solde de carte</h2>
+        <p class="lead mb-5">
             <span>Carte N°: <code>{{tagId}}</code></span>
         </p>     
         
         <p>
             {% include tokens_table %}
         </p>
-            
-        <a href="/" class="btn btn-secondary w-100 p-3 mb-3">
-            {% translate "Go back" %} 
-        </a>
+        <p>
+            Pour recharger votre carte, merci de vous diriger en caisse.
+        </p>
     </main>
 {% endblock %}

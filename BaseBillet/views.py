@@ -373,6 +373,7 @@ def emailconfirmation(request, token):
 class CheckCard(viewsets.ViewSet):
 
     def retrieve(self, request, pk=None):
+        config = Configuration.get_solo()
         fedowAPI = FedowAPI()
         
         # TODO: Serializer ?
@@ -393,13 +394,17 @@ class CheckCard(viewsets.ViewSet):
         #tokens = [token for token in wallet.get('tokens') if token.get('asset_category') not in ['SUB', 'BDG']]
 
         tokens = serialized_check_card['wallet']['tokens']
+        tokens = [token for token in tokens if token.get('asset_category') in ['TLF', 'TNF']]
 
         context = {
+            "config": config,
             "qrcode_uuid": qrcode_uuid,     
             "tagId": first_tag_id,
-            "base_template": 'reunion/base.html',  
-            "tokens_table": 'htmx/views/my_account/tokens_table.html',
-            "tokens": tokens
+            "base_template": 'reunion/blank_base.html',  
+            "tokens_table": 'htmx/views/my_account/light_tokens_table.html',
+            "tokens": tokens,
+            "style": "max-width: 10rem;",
+
         }
 
         return render(request, "reunion/check_base.html", context=context)
