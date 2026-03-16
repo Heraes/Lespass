@@ -3,12 +3,13 @@
 
 {% block main %}
     <main class="container-lg py-5">
-        <picture class="d-block {% if ratio %}ratio ratio-{{ ratio }}{% else %}h-100{% endif %}" style="text-align: center">
-                <img class="object-fit-cover w-100 h-100{% if class %} {{ class }}{% endif %}" 
-                {% if style %}style="{{ style }}"{% endif %} 
-                src="{{ config.logo.thumbnail.url|randImg }}" alt="{{ config.organisation }}"/>
-        </picture>
-
+        <p>
+            <picture class="d-block {% if ratio %}ratio ratio-{{ ratio }}{% else %}h-100{% endif %}" style="text-align: center">
+                    <img class="object-fit-cover w-100 h-100{% if class %} {{ class }}{% endif %}" 
+                    {% if style %}style="{{ style }}"{% endif %} 
+                    src="{{ config.logo.thumbnail.url|randImg }}" alt="{{ config.organisation }}"/>
+            </picture>
+        </p>
         <h1 style="text-align: center">{{config.organisation}}</h1>
         <br/>
         <h2>Consultation du solde de carte</h2>
@@ -16,8 +17,12 @@
             <span>Carte N°: <code>{{number_printed}}</code></span>
         </p>     
         
-        <p>
-            {% include tokens_table %}
+        <p>            
+            {% if tokens %}
+                {% include tokens_table %}
+            {% else %}
+                Votre carte est vide.
+            {% endif %}
         </p>
         <p>
             Pour recharger votre carte, merci de vous diriger en caisse.
